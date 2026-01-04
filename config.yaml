@@ -1,0 +1,18 @@
+planet:
+  base_radius: 1.0
+  resolution:
+    lat: 150
+    lon: 150
+
+noise:
+  amplitude: 0.35
+  octaves: 5
+  seed: 42
+
+ocean:
+  sea_level: 1.02
+  ocean_color: [20, 60, 160]
+  land_color: [40, 160, 60]
+
+export:
+  filename: planet.ply
