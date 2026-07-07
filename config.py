@@ -6,5 +6,6 @@ def load_config(path="config.yaml"):
 
     if cfg is None:
         raise RuntimeError("config.yaml is empty or invalid")
+    print("HIEE")
 
     return cfg
