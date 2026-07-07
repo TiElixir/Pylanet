@@ -1,18 +1,58 @@
 planet:
+  preset: earthlike
   base_radius: 1.0
   resolution:
-    lat: 150
-    lon: 150
+    lat: 180
+    lon: 240
 
 noise:
-  amplitude: 0.35
-  octaves: 5
-  seed: 42
+  seed: 106
+  amplitude: 0.28
+  octaves: 6
+  lacunarity: 2.0
+  gain: 0.5
+
+terrain:
+  pattern_scale: 1.0
+  color_detail: 0.5
+  plains_bias: 0.0
+  continent_scale: 0.95
+  mountain_strength: 0.34
+  detail_strength: 0.08
+  moisture: 0.62
+  temperature: 0.58
+  ice_caps: 0.35
+  beach_band: 0.025
+  mountain_level: 0.74
+  biome_biases:
+    ocean: 1.0
+    desert: 1.0
+    savanna: 1.0
+    grassland: 1.0
+    forest: 1.0
+    rainforest: 1.0
+    tundra: 1.0
+    snow: 1.0
+    rock: 1.0
 
 ocean:
   sea_level: 1.02
-  ocean_color: [20, 60, 160]
-  land_color: [40, 160, 60]
+
+biomes:
+  deep_ocean: [8, 22, 74]
+  ocean: [20, 74, 156]
+  shallows: [46, 142, 178]
+  beach: [210, 190, 118]
+  grassland: [78, 156, 68]
+  forest: [32, 105, 56]
+  rainforest: [22, 132, 74]
+  savanna: [168, 156, 82]
+  desert: [202, 164, 96]
+  tundra: [160, 176, 160]
+  snow: [238, 244, 248]
+  rock: [116, 112, 108]
+  basalt: [58, 54, 52]
+  lava: [232, 78, 26]
 
 export:
   filename: planet.ply

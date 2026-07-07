@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pylanet</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="viewport">
+      <canvas id="planetCanvas"></canvas>
+      <div class="hud">
+        <h1>Pylanet</h1>
+        <div id="stats" class="stats">Ready</div>
+      </div>
+    </section>
+
+    <aside class="controls">
+      <div class="control-row">
+        <label for="preset">Preset</label>
+        <select id="preset" name="preset">
+          <option value="earthlike">Earthlike</option>
+          <option value="arid">Arid</option>
+          <option value="frozen">Frozen</option>
+          <option value="oceanic">Oceanic</option>
+          <option value="volcanic">Volcanic</option>
+        </select>
+      </div>
+
+      <div class="split">
+        <label>Seed <input id="seed" name="seed" type="number" value="106"></label>
+        <button id="randomSeed" class="icon-button" type="button" title="Random seed">?</button>
+      </div>
+
+      <label>
+        Resolution <span id="resolutionValue" class="value-readout">180 x 240</span>
+        <input id="resolution" name="resolution" type="range" min="24" max="360" step="12" value="180">
+      </label>
+
+      <label>Relief <input id="amplitude" name="amplitude" type="range" min="0.02" max="0.65" step="0.01" value="0.28"></label>
+      <label>Sea level <input id="seaLevel" name="seaLevel" type="range" min="0.82" max="1.18" step="0.005" value="1.02"></label>
+      <label>Pattern scale <input id="patternScale" name="patternScale" type="range" min="0.25" max="3" step="0.05" value="1"></label>
+      <label>Color texture <input id="colorDetail" name="colorDetail" type="range" min="0" max="1" step="0.01" value="0.5"></label>
+      <label>Continents <input id="continentScale" name="continentScale" type="range" min="0.35" max="2.2" step="0.01" value="0.95"></label>
+      <label>Mountains <input id="mountainStrength" name="mountainStrength" type="range" min="0" max="0.8" step="0.01" value="0.34"></label>
+      <label>Detail <input id="detailStrength" name="detailStrength" type="range" min="0" max="0.25" step="0.005" value="0.08"></label>
+      <label>Moisture <input id="moisture" name="moisture" type="range" min="0" max="1" step="0.01" value="0.62"></label>
+      <label>Temperature <input id="temperature" name="temperature" type="range" min="0" max="1" step="0.01" value="0.58"></label>
+      <label>Ice caps <input id="iceCaps" name="iceCaps" type="range" min="0" max="1" step="0.01" value="0.35"></label>
+      <label>Plains <input id="plainsBias" name="plainsBias" type="range" min="0" max="1" step="0.01" value="0"></label>
+
+      <fieldset class="bias-controls">
+        <legend>Biome bias</legend>
+        <label>Ocean <input id="oceanBias" name="oceanBias" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <label>Desert <input id="desertBias" name="desertBias" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <label>Savanna <input id="savannaBias" name="savannaBias" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <label>Grassland <input id="grasslandBias" name="grasslandBias" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <label>Forest <input id="forestBias" name="forestBias" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <label>Rainforest <input id="rainforestBias" name="rainforestBias" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <label>Tundra <input id="tundraBias" name="tundraBias" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <label>Snow <input id="snowBias" name="snowBias" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <label>Rock <input id="rockBias" name="rockBias" type="range" min="0" max="2" step="0.05" value="1"></label>
+      </fieldset>
+
+      <div class="split">
+        <label>Octaves <input id="octaves" name="octaves" type="number" min="1" max="9" value="6"></label>
+        <label>Gain <input id="gain" name="gain" type="number" min="0.1" max="0.9" step="0.05" value="0.5"></label>
+      </div>
+
+      <label class="checkbox-row">
+        <input id="autoRotate" type="checkbox">
+        <span>Auto rotate</span>
+      </label>
+
+      <div class="actions">
+        <button id="generate" class="primary" type="button">Generate</button>
+        <button id="savePlanet" type="button" disabled>Save PLY</button>
+      </div>
+      <div id="biomes" class="biomes"></div>
+    </aside>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

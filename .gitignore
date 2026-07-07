@@ -1,13 +1,11 @@
 # Python bytecode
 __pycache__/
+**/__pycache__/
 *.pyc
 *.pyo
 *.pyd
+planet.ply
 
 # Virtual environments
 venv/
 .env/
-
-# OS junk
-.DS_Store
-Thumbs.db

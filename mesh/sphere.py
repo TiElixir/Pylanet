@@ -17,7 +17,9 @@ def generate_uv_sphere(radius=1.0, lat=50, lon=50):
         for j in range(lon):
             curr = i * lon + j
             next = curr + lon
-            faces.append((curr, next, curr + 1))
-            faces.append((curr + 1, next, next + 1))
+            curr_right = i * lon + ((j + 1) % lon)
+            next_right = (i + 1) * lon + ((j + 1) % lon)
+            faces.append((curr, next, curr_right))
+            faces.append((curr_right, next, next_right))
 
     return vertices, faces
