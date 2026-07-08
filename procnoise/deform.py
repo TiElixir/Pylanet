@@ -312,7 +312,7 @@ def apply_noise(vertices, cfg):
         moisture = _clamp(0.5 + moisture_value * 0.55 + (moisture_bias - 0.5))
         temperature = _clamp(
             temperature_bias
-            - latitude * (0.75 + ice_caps * 0.35)
+            - (latitude ** 16) * (2.5 + ice_caps * 1.5)
             + temp_noise * 0.12
             - raw_height01 * 0.12
         )
