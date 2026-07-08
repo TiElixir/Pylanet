@@ -177,7 +177,7 @@ def _ridged_noise(noise, x, y, z, octaves, lacunarity, gain):
 
     return value / weight_total if weight_total else 0.0
 
-def classify_biome(cfg, radius, sea_level, height01, moisture, temperature):
+def classify_biome(cfg, radius, sea_level, height01, moisture, temperature, ice_caps):
     beach_band = _cfg_get(cfg, "terrain", "beach_band", 0.025)
     mountain_level = _cfg_get(cfg, "terrain", "mountain_level", 0.74)
     volcanic = _preset_name(cfg) == "volcanic"
@@ -200,7 +200,7 @@ def classify_biome(cfg, radius, sea_level, height01, moisture, temperature):
     if temperature < 0.18 + (snow_bias - 1.0) * 0.12:
         return "snow", _color(cfg, "snow")
     if height01 > effective_mountain_level:
-        snow_line = 0.86 - (1.0 - temperature) * 0.12 - (snow_bias - 1.0) * 0.1
+        snow_line = 1.0 - ice_caps * 0.3 - (1.0 - temperature) * 0.04 - (snow_bias - 1.0) * 0.1
         if height01 > snow_line:
             return "snow", _color(cfg, "snow")
         return "rock", _color(cfg, "rock")
@@ -312,12 +312,12 @@ def apply_noise(vertices, cfg):
         moisture = _clamp(0.5 + moisture_value * 0.55 + (moisture_bias - 0.5))
         temperature = _clamp(
             temperature_bias
-            - latitude * (0.75 + ice_caps * 0.35)
+            - (latitude ** 16) * (2.5 + ice_caps * 1.5)
             + temp_noise * 0.12
             - raw_height01 * 0.12
         )
 
-        biome, color = classify_biome(cfg, original_radius, sea_level, raw_height01, moisture, temperature)
+        biome, color = classify_biome(cfg, original_radius, sea_level, raw_height01, moisture, temperature, ice_caps)
         color = _color_variation(
             cfg,
             biome,
