@@ -1,15 +1,7 @@
 # Pylanet
 
-<p align="center"> 
-    <img src="https://img.shields.io/github/issues/TiElixir/Pylanet">
-    <img src="https://img.shields.io/github/forks/TiElixir/Pylanet">
-    <img src="https://img.shields.io/github/stars/TiElixir/Pylanet">
-    <img src="https://img.shields.io/github/license/TiElixir/Pylanet">
-</p>
-
 Pylanet is a procedural planet generator written in Python. It builds a UV sphere, deforms it with layered 3D Perlin noise, assigns biome colors, and exports the result as a vertex-colored PLY mesh. It also includes a local Web UI for generating and inspecting planets interactively.
 
-<img width="1280" height="720" alt="Pylanet-2" src="https://github.com/user-attachments/assets/46cf2302-4e04-4539-b2ee-a8b26b4f44db" />
 
 ## Features
 

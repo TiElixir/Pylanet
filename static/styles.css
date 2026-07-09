@@ -86,6 +86,39 @@ select {
   backdrop-filter: blur(14px);
 }
 
+.mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tab-button {
+  min-height: 36px;
+  background: transparent;
+  color: rgba(245, 247, 251, 0.68);
+  cursor: pointer;
+}
+
+.tab-button.active {
+  background: #e9f3ff;
+  color: #07111f;
+  font-weight: 700;
+}
+
+.panel-section {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-section.active {
+  display: flex;
+}
+
 label,
 .control-row {
   display: grid;
@@ -112,6 +145,18 @@ label,
 
 .bias-controls label {
   font-size: 0.78rem;
+}
+
+.body-controls {
+  grid-template-columns: 1fr 1fr;
+}
+
+.wide-button {
+  grid-column: 1 / -1;
+  min-height: 40px;
+  background: #172033;
+  color: #e5eefb;
+  cursor: pointer;
 }
 
 .value-readout {
@@ -209,6 +254,53 @@ button:disabled {
   gap: 10px;
   padding-block: 2px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.orbit-editor {
+  width: 100%;
+  aspect-ratio: 14 / 11;
+  min-height: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.18) 0 1px, transparent 2px),
+    radial-gradient(circle at 25% 30%, rgba(255, 255, 255, 0.16) 0 1px, transparent 2px),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.12) 0 1px, transparent 2px),
+    rgba(0, 0, 0, 0.22);
+  touch-action: none;
+}
+
+.orbit-path {
+  fill: none;
+  stroke: rgba(70, 194, 255, 0.36);
+  stroke-width: 1.2;
+}
+
+.spawn-path {
+  stroke: rgba(255, 214, 107, 0.58);
+  stroke-dasharray: 4 4;
+}
+
+.spawn-handle {
+  fill: #ffd66b;
+  stroke: rgba(255, 255, 255, 0.8);
+  stroke-width: 1.4;
+  cursor: grab;
+}
+
+.spawn-handle:active {
+  cursor: grabbing;
+}
+
+.system-star {
+  fill: #ffd66b;
+  stroke: rgba(255, 255, 255, 0.72);
+  stroke-width: 1.2;
+}
+
+.system-planet {
+  stroke: rgba(255, 255, 255, 0.72);
+  stroke-width: 1.2;
 }
 
 @media (max-width: 860px) {

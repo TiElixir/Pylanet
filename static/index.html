@@ -17,6 +17,12 @@
     </section>
 
     <aside class="controls">
+      <div class="mode-tabs" role="tablist" aria-label="Workspace mode">
+        <button id="planetMode" class="tab-button active" type="button">Planet</button>
+        <button id="systemMode" class="tab-button" type="button">System</button>
+      </div>
+
+      <section id="planetPanel" class="panel-section active">
       <div class="control-row">
         <label for="preset">Preset</label>
         <select id="preset" name="preset">
@@ -77,7 +83,60 @@
         <button id="generate" class="primary" type="button">Generate</button>
         <button id="savePlanet" type="button" disabled>Save PLY</button>
       </div>
+
+      <fieldset class="bias-controls body-controls">
+        <legend>Save planet body</legend>
+        <label>Name <input id="planetName" type="text" value="Terra"></label>
+        <label>Mass <input id="planetMass" type="number" min="0.01" step="0.01" value="1"></label>
+        <label>Radius <input id="planetRadius" type="number" min="0.1" step="0.1" value="1"></label>
+        <label>Atmosphere <input id="planetAtmosphere" type="number" min="0" max="10" step="0.1" value="1"></label>
+        <button id="saveBody" class="wide-button" type="button" disabled>Save Named Planet</button>
+      </fieldset>
       <div id="biomes" class="biomes"></div>
+      </section>
+
+      <section id="systemPanel" class="panel-section">
+        <fieldset class="bias-controls body-controls">
+          <legend>Create star</legend>
+          <label>Name <input id="starName" type="text" value="Helios"></label>
+          <label>Mass <input id="starMass" type="number" min="0.1" step="0.1" value="1"></label>
+          <label>Radius <input id="starRadius" type="number" min="0.2" step="0.1" value="3"></label>
+          <label>Temperature K <input id="starTemperature" type="number" min="1800" max="50000" step="100" value="5778"></label>
+          <button id="saveStar" class="wide-button" type="button">Save Star</button>
+        </fieldset>
+
+        <div class="control-row">
+          <label for="bodyLibrary">Saved bodies</label>
+          <select id="bodyLibrary"></select>
+        </div>
+
+        <fieldset class="bias-controls body-controls">
+          <legend>Orbit</legend>
+          <label>Semi-major <input id="orbitMajor" type="number" min="1" step="0.5" value="8"></label>
+          <label>Semi-minor <input id="orbitMinor" type="number" min="1" step="0.5" value="6"></label>
+          <label>Phase <input id="orbitPhase" type="number" min="0" max="360" step="1" value="0"></label>
+          <label>Velocity <input id="orbitVelocity" type="number" step="0.01" value="0.25"></label>
+          <button id="addToSystem" class="wide-button primary" type="button">Drop Into System</button>
+        </fieldset>
+
+        <fieldset class="bias-controls body-controls">
+          <legend>Simulation</legend>
+          <label>Gravity <input id="gravityStrength" type="number" min="0" step="0.01" value="1"></label>
+          <label>Time scale <input id="timeScale" type="number" min="0" step="0.1" value="1"></label>
+          <label class="checkbox-row">
+            <input id="simulationPaused" type="checkbox">
+            <span>Paused</span>
+          </label>
+          <label class="checkbox-row">
+            <input id="collisionsEnabled" type="checkbox" checked>
+            <span>Collisions</span>
+          </label>
+        </fieldset>
+
+        <svg id="orbitEditor" class="orbit-editor" viewBox="0 0 280 220" role="img" aria-label="Solar system orbit editor"></svg>
+
+        <div id="systemBodies" class="biomes"></div>
+      </section>
     </aside>
   </main>
   <script src="/app.js"></script>
