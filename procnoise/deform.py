@@ -28,6 +28,7 @@ PLANET_PRESETS = {
         "amplitude": 0.28,
         "continent_scale": 0.95,
         "mountain_strength": 0.34,
+        "mountain_level": 0.74,
         "detail_strength": 0.08,
         "pattern_scale": 1.0,
         "color_detail": 0.5,
@@ -41,6 +42,7 @@ PLANET_PRESETS = {
         "amplitude": 0.25,
         "continent_scale": 1.15,
         "mountain_strength": 0.42,
+        "mountain_level": 0.74,
         "detail_strength": 0.1,
         "pattern_scale": 1.15,
         "color_detail": 0.62,
@@ -54,6 +56,7 @@ PLANET_PRESETS = {
         "amplitude": 0.2,
         "continent_scale": 0.85,
         "mountain_strength": 0.24,
+        "mountain_level": 0.74,
         "detail_strength": 0.05,
         "pattern_scale": 0.85,
         "color_detail": 0.38,
@@ -67,6 +70,7 @@ PLANET_PRESETS = {
         "amplitude": 0.18,
         "continent_scale": 0.7,
         "mountain_strength": 0.2,
+        "mountain_level": 0.74,
         "detail_strength": 0.06,
         "pattern_scale": 0.8,
         "color_detail": 0.48,
@@ -80,6 +84,7 @@ PLANET_PRESETS = {
         "amplitude": 0.36,
         "continent_scale": 1.35,
         "mountain_strength": 0.72,
+        "mountain_level": 0.55,
         "detail_strength": 0.14,
         "pattern_scale": 1.45,
         "color_detail": 0.78,
@@ -179,8 +184,7 @@ def _ridged_noise(noise, x, y, z, octaves, lacunarity, gain):
 
 def classify_biome(cfg, radius, sea_level, height01, moisture, temperature, ice_caps):
     beach_band = _cfg_get(cfg, "terrain", "beach_band", 0.025)
-    default_mountain_level = 0.55 if _preset_name(cfg) == "volcanic" else 0.74
-    mountain_level = _cfg_get(cfg, "terrain", "mountain_level", default_mountain_level)
+    mountain_level = _cfg_get(cfg, "terrain", "mountain_level", _preset(cfg)["mountain_level"])
     volcanic = _preset_name(cfg) == "volcanic"
     ocean_bias = _biome_bias(cfg, "ocean")
     snow_bias = _biome_bias(cfg, "snow")
