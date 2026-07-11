@@ -27,7 +27,16 @@ Pylanet is a procedural planet generator written in Python. It builds a UV spher
 
 ```powershell
 python -m venv venv
+
+**Windows:**
+```powershell
 .\venv\Scripts\Activate.ps1
+
+**Linux/macOS:**
+```bash
+source venv/bin/activate
+
+```powershell
 pip install -r requirements.txt
 ```
 
