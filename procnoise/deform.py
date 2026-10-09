@@ -1,6 +1,8 @@
 import numpy as np
 from procnoise.perlin import PerlinNoise, fbm
 
+NOISE_WORKER_CONTEXT = None
+
 DEFAULT_BIOMES = {
     "deep_ocean": [8, 22, 74],
     "ocean": [20, 74, 156],
@@ -226,126 +228,181 @@ def classify_biome(cfg, radius, sea_level, height01, moisture, temperature, ice_
         winner = "grassland"
     return winner, _color(cfg, winner)
 
-def apply_noise(vertices, cfg):
+def _noise_settings(cfg):
     noise_cfg = cfg.get("noise", {})
     terrain_cfg = cfg.get("terrain", {})
     preset = _preset(cfg)
 
-    pn = PerlinNoise(noise_cfg.get("seed", 0))
-    moisture_noise = PerlinNoise(noise_cfg.get("seed", 0) + 101)
-    detail_noise = PerlinNoise(noise_cfg.get("seed", 0) + 211)
-    texture_noise = PerlinNoise(noise_cfg.get("seed", 0) + 307)
-
-    base_radius = cfg.get("planet", {}).get("base_radius", 1.0)
-    amplitude = noise_cfg.get("amplitude", preset["amplitude"])
-    octaves = noise_cfg.get("octaves", 5)
-    lacunarity = noise_cfg.get("lacunarity", 2.0)
-    gain = noise_cfg.get("gain", 0.5)
-    pattern_scale = terrain_cfg.get("pattern_scale", preset["pattern_scale"])
-    color_detail = terrain_cfg.get("color_detail", preset["color_detail"])
-    continent_scale = terrain_cfg.get("continent_scale", preset["continent_scale"])
-    mountain_strength = terrain_cfg.get("mountain_strength", preset["mountain_strength"])
-    detail_strength = terrain_cfg.get("detail_strength", preset["detail_strength"])
-    plains_bias = _clamp(terrain_cfg.get("plains_bias", 0.0))
+    seed = noise_cfg.get("seed", 0)
     sea_level = cfg.get("ocean", {}).get("sea_level", preset["sea_level"])
     sea_level += (preset["ocean_mix"] - 0.5) * 0.07
-    effective_sea_level = sea_level + (_biome_bias(cfg, "ocean") - 1.0) * 0.08
-    moisture_bias = terrain_cfg.get("moisture", preset["moisture"])
-    temperature_bias = terrain_cfg.get("temperature", preset["temperature"])
-    ice_caps = terrain_cfg.get("ice_caps", preset["ice_caps"])
 
-    new_vertices = []
-    colors = []
-    metadata = []
+    return {
+        "seed": seed,
+        "base_radius": cfg.get("planet", {}).get("base_radius", 1.0),
+        "amplitude": noise_cfg.get("amplitude", preset["amplitude"]),
+        "octaves": noise_cfg.get("octaves", 5),
+        "lacunarity": noise_cfg.get("lacunarity", 2.0),
+        "gain": noise_cfg.get("gain", 0.5),
+        "pattern_scale": terrain_cfg.get("pattern_scale", preset["pattern_scale"]),
+        "color_detail": terrain_cfg.get("color_detail", preset["color_detail"]),
+        "continent_scale": terrain_cfg.get("continent_scale", preset["continent_scale"]),
+        "mountain_strength": terrain_cfg.get("mountain_strength", preset["mountain_strength"]),
+        "detail_strength": terrain_cfg.get("detail_strength", preset["detail_strength"]),
+        "plains_bias": _clamp(terrain_cfg.get("plains_bias", 0.0)),
+        "sea_level": sea_level,
+        "effective_sea_level": sea_level + (_biome_bias(cfg, "ocean") - 1.0) * 0.08,
+        "moisture_bias": terrain_cfg.get("moisture", preset["moisture"]),
+        "temperature_bias": terrain_cfg.get("temperature", preset["temperature"]),
+        "ice_caps": terrain_cfg.get("ice_caps", preset["ice_caps"]),
+    }
 
-    for x, y, z in vertices:
-        v = np.array([x, y, z])
-        u = v / np.linalg.norm(v)
 
-        continental = fbm(
-            pn,
-            u[0] * continent_scale * pattern_scale,
-            u[1] * continent_scale * pattern_scale,
-            u[2] * continent_scale * pattern_scale,
-            octaves=octaves,
-            lacunarity=lacunarity,
-            gain=gain,
-        )
-        ridges = _ridged_noise(
-            detail_noise,
-            u[0] * 2.8 * pattern_scale,
-            u[1] * 2.8 * pattern_scale,
-            u[2] * 2.8 * pattern_scale,
-            max(2, octaves - 1),
-            lacunarity,
-            gain,
-        )
-        fine_detail = fbm(
-            detail_noise,
-            u[0] * 8.0 * pattern_scale,
-            u[1] * 8.0 * pattern_scale,
-            u[2] * 8.0 * pattern_scale,
-            octaves=max(2, octaves - 2),
-            lacunarity=lacunarity,
-            gain=gain,
-        )
+def _deform_vertex(vertex, cfg, settings, noises):
+    pn, moisture_noise, detail_noise, texture_noise = noises
+    x, y, z = vertex
+    v = np.array([x, y, z])
+    u = v / np.linalg.norm(v)
 
-        flattened_continents = continental * (1.0 - plains_bias * 0.28)
-        softened_ridges = ridges * mountain_strength * (1.0 - plains_bias * 0.82)
-        softened_detail = fine_detail * detail_strength * (1.0 - plains_bias * 0.7)
-        elevation = flattened_continents + softened_ridges + softened_detail
-        elevation *= 1.0 - plains_bias * 0.22
-        r = base_radius + elevation * amplitude
-        original_radius = r
-        raw_height01 = _clamp((r - (base_radius - amplitude)) / (amplitude * 2.0))
-        latitude = abs(u[1])
+    pattern_scale = settings["pattern_scale"]
+    octaves = settings["octaves"]
+    lacunarity = settings["lacunarity"]
+    gain = settings["gain"]
 
-        temp_noise = fbm(
-            moisture_noise,
-            u[0] * 1.4 * pattern_scale,
-            u[1] * 1.4 * pattern_scale,
-            u[2] * 1.4 * pattern_scale,
-            octaves=3,
-        )
-        moisture_value = fbm(
-            moisture_noise,
-            u[0] * 2.5 * pattern_scale,
-            u[1] * 2.5 * pattern_scale,
-            u[2] * 2.5 * pattern_scale,
-            octaves=4,
-        )
-        moisture_swing = 0.55 * (0.4 + 0.6 * moisture_bias)
-        moisture = _clamp(0.5 + moisture_value * moisture_swing + (moisture_bias - 0.5))
-        temperature = _clamp(
-            temperature_bias
-            - (latitude ** 16) * (2.5 + ice_caps * 1.5)
-            + temp_noise * 0.12
-            - raw_height01 * 0.12
-        )
+    continental = fbm(
+        pn,
+        u[0] * settings["continent_scale"] * pattern_scale,
+        u[1] * settings["continent_scale"] * pattern_scale,
+        u[2] * settings["continent_scale"] * pattern_scale,
+        octaves=octaves,
+        lacunarity=lacunarity,
+        gain=gain,
+    )
+    ridges = _ridged_noise(
+        detail_noise,
+        u[0] * 2.8 * pattern_scale,
+        u[1] * 2.8 * pattern_scale,
+        u[2] * 2.8 * pattern_scale,
+        max(2, octaves - 1),
+        lacunarity,
+        gain,
+    )
+    fine_detail = fbm(
+        detail_noise,
+        u[0] * 8.0 * pattern_scale,
+        u[1] * 8.0 * pattern_scale,
+        u[2] * 8.0 * pattern_scale,
+        octaves=max(2, octaves - 2),
+        lacunarity=lacunarity,
+        gain=gain,
+    )
 
-        biome, color = classify_biome(cfg, original_radius, sea_level, raw_height01, moisture, temperature, ice_caps)
-        color = _color_variation(
-            cfg,
-            biome,
-            color,
-            u,
-            raw_height01,
-            moisture,
-            temperature,
-            texture_noise,
-            detail_noise,
-            pattern_scale,
-            color_detail,
-        )
-        if r < effective_sea_level:
-            r = effective_sea_level
-        colors.append(color)
-        metadata.append({
-            "biome": biome,
-            "height": round(raw_height01, 4),
-            "moisture": round(moisture, 4),
-            "temperature": round(temperature, 4),
-        })
-        new_vertices.append(tuple(u * r))
+    plains_bias = settings["plains_bias"]
+    elevation = continental * (1.0 - plains_bias * 0.28)
+    elevation += ridges * settings["mountain_strength"] * (1.0 - plains_bias * 0.82)
+    elevation += fine_detail * settings["detail_strength"] * (1.0 - plains_bias * 0.7)
+    elevation *= 1.0 - plains_bias * 0.22
+    base_radius = settings["base_radius"]
+    amplitude = settings["amplitude"]
+    r = base_radius + elevation * amplitude
+    original_radius = r
+    raw_height01 = _clamp((r - (base_radius - amplitude)) / (amplitude * 2.0))
+    latitude = abs(u[1])
 
-    return new_vertices, colors, metadata
+    temp_noise = fbm(
+        moisture_noise,
+        u[0] * 1.4 * pattern_scale,
+        u[1] * 1.4 * pattern_scale,
+        u[2] * 1.4 * pattern_scale,
+        octaves=3,
+    )
+    moisture_value = fbm(
+        moisture_noise,
+        u[0] * 2.5 * pattern_scale,
+        u[1] * 2.5 * pattern_scale,
+        u[2] * 2.5 * pattern_scale,
+        octaves=4,
+    )
+    moisture_bias = settings["moisture_bias"]
+    moisture = _clamp(0.5 + moisture_value * 0.55 * (0.4 + 0.6 * moisture_bias) + (moisture_bias - 0.5))
+    ice_caps = settings["ice_caps"]
+    temperature = _clamp(
+        settings["temperature_bias"]
+        - (latitude ** 16) * (2.5 + ice_caps * 1.5)
+        + temp_noise * 0.12
+        - raw_height01 * 0.12
+    )
+
+    biome, color = classify_biome(cfg, original_radius, settings["sea_level"], raw_height01, moisture, temperature, ice_caps)
+    color = _color_variation(
+        cfg,
+        biome,
+        color,
+        u,
+        raw_height01,
+        moisture,
+        temperature,
+        texture_noise,
+        detail_noise,
+        pattern_scale,
+        settings["color_detail"],
+    )
+    if r < settings["effective_sea_level"]:
+        r = settings["effective_sea_level"]
+    return tuple(u * r), color, {
+        "biome": biome,
+        "height": round(raw_height01, 4),
+        "moisture": round(moisture, 4),
+        "temperature": round(temperature, 4),
+    }
+
+
+def _init_noise_worker(cfg, settings):
+    global NOISE_WORKER_CONTEXT
+    NOISE_WORKER_CONTEXT = (cfg, settings, _noise_context(settings))
+
+
+def _apply_noise_chunk(chunk):
+    return _deform_chunk(chunk, *NOISE_WORKER_CONTEXT)
+
+
+def _deform_chunk(chunk, cfg, settings, noises):
+    return [_deform_vertex(vertex, cfg, settings, noises) for vertex in chunk]
+
+
+def _noise_context(settings):
+    seed = settings["seed"]
+    noises = (
+        PerlinNoise(seed),
+        PerlinNoise(seed + 101),
+        PerlinNoise(seed + 211),
+        PerlinNoise(seed + 307),
+    )
+    return noises
+
+
+def apply_noise(vertices, cfg, workers=1):
+    settings = _noise_settings(cfg)
+    workers = max(1, int(workers or 1))
+    vertices = list(vertices)
+    effective_workers = 1
+
+    if workers == 1 or len(vertices) < 4096:
+        results = _deform_chunk(vertices, cfg, settings, _noise_context(settings))
+    else:
+        from concurrent.futures import ProcessPoolExecutor
+        import math
+
+        effective_workers = min(workers, math.ceil(len(vertices) / 4096))
+        chunk_size = max(4096, math.ceil(len(vertices) / (effective_workers * 4)))
+        chunks = [vertices[i:i + chunk_size] for i in range(0, len(vertices), chunk_size)]
+        with ProcessPoolExecutor(
+            max_workers=effective_workers,
+            initializer=_init_noise_worker,
+            initargs=(cfg, settings),
+        ) as executor:
+            result_chunks = executor.map(_apply_noise_chunk, chunks)
+            results = [item for chunk in result_chunks for item in chunk]
+
+    new_vertices, colors, metadata = zip(*results) if results else ((), (), ())
+    return list(new_vertices), list(colors), list(metadata), effective_workers
