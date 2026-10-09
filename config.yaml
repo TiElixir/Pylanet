@@ -12,6 +12,9 @@ noise:
   lacunarity: 2.0
   gain: 0.5
 
+generation:
+  workers: auto
+
 terrain:
   pattern_scale: 1.0
   color_detail: 0.5

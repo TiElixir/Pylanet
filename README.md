@@ -92,6 +92,9 @@ noise:
   lacunarity: 2.0
   gain: 0.5
 
+generation:
+  workers: auto
+
 terrain:
   pattern_scale: 1.0
   color_detail: 0.5
@@ -124,6 +127,7 @@ Useful knobs:
 - `detail_strength`: adds fine surface variation
 - `moisture`, `temperature`, `ice_caps`: influence biome placement
 - `lat`, `lon`: control mesh resolution
+- `generation.workers`: controls CPU workers for terrain and texture deformation; `auto` uses all available cores
 
 ## Project Layout
 

@@ -25,6 +25,7 @@ def _cfg_from_payload(payload):
     noise = cfg.setdefault("noise", {})
     terrain = cfg.setdefault("terrain", {})
     ocean = cfg.setdefault("ocean", {})
+    generation = cfg.setdefault("generation", {})
 
     planet["preset"] = payload.get("preset", planet.get("preset", "earthlike"))
     preset = PLANET_PRESETS.get(planet["preset"], PLANET_PRESETS["earthlike"])
@@ -48,6 +49,7 @@ def _cfg_from_payload(payload):
         resolution["lat"] = max(12, min(360, _number(payload.get("lat"), resolution.get("lat", 180), True)))
         resolution["lon"] = max(16, min(480, _number(payload.get("lon"), resolution.get("lon", 240), True)))
     planet["base_radius"] = _number(payload.get("baseRadius"), planet.get("base_radius", 1.0))
+    generation.setdefault("workers", "auto")
 
     noise["seed"] = _number(payload.get("seed"), noise.get("seed", 0), True)
     noise["amplitude"] = _number(payload.get("amplitude"), noise.get("amplitude", 0.28))

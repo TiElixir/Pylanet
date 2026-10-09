@@ -1,7 +1,19 @@
+import os
 from collections import Counter
 
 from mesh.sphere import generate_uv_sphere
 from procnoise.deform import apply_noise
+
+def _generation_workers(cfg):
+    generation_cfg = cfg.get("generation", {})
+    workers = generation_cfg.get("workers", "auto")
+    if workers == "auto":
+        return os.cpu_count() or 1
+    try:
+        return max(1, int(workers))
+    except (TypeError, ValueError):
+        return os.cpu_count() or 1
+
 
 def generate_planet(cfg, debug=False):
     planet_cfg = cfg.get("planet", {})
@@ -14,7 +26,8 @@ def generate_planet(cfg, debug=False):
         lat=lat,
         lon=lon,
     )
-    vertices, colors, metadata = apply_noise(vertices, cfg)
+    workers = _generation_workers(cfg)
+    vertices, colors, metadata = apply_noise(vertices, cfg, workers=workers)
 
     if debug:
         peak_snow_near_equator = [
@@ -39,5 +52,6 @@ def generate_planet(cfg, debug=False):
             "vertices": len(vertices),
             "faces": len(faces),
             "biomes": dict(sorted(biome_counts.items())),
+            "workers": workers,
         },
     }
