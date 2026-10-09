@@ -27,7 +27,7 @@ def generate_planet(cfg, debug=False):
         lon=lon,
     )
     workers = _generation_workers(cfg)
-    vertices, colors, metadata = apply_noise(vertices, cfg, workers=workers)
+    vertices, colors, metadata, effective_workers = apply_noise(vertices, cfg, workers=workers)
 
     if debug:
         peak_snow_near_equator = [
@@ -52,6 +52,6 @@ def generate_planet(cfg, debug=False):
             "vertices": len(vertices),
             "faces": len(faces),
             "biomes": dict(sorted(biome_counts.items())),
-            "workers": workers,
+            "workers": effective_workers,
         },
     }

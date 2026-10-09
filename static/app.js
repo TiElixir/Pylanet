@@ -283,7 +283,7 @@ function updateResolutionReadout() {
 }
 
 function renderStats(data) {
-  const workers = data.stats.workers ? ` / ${data.stats.workers} workers` : "";
+  const workers = data.stats.workers ? ` / ${data.stats.workers} worker${data.stats.workers === 1 ? "" : "s"}` : "";
   statsEl.textContent = `${data.stats.vertices.toLocaleString()} vertices / ${data.stats.faces.toLocaleString()} faces${workers}`;
   biomesEl.innerHTML = "";
   Object.entries(data.stats.biomes).forEach(([name, count]) => {

@@ -359,6 +359,18 @@ def _deform_vertex(vertex, cfg, settings, noises):
 
 def _init_noise_worker(cfg, settings):
     global NOISE_WORKER_CONTEXT
+    NOISE_WORKER_CONTEXT = (cfg, settings, _noise_context(settings))
+
+
+def _apply_noise_chunk(chunk):
+    return _deform_chunk(chunk, *NOISE_WORKER_CONTEXT)
+
+
+def _deform_chunk(chunk, cfg, settings, noises):
+    return [_deform_vertex(vertex, cfg, settings, noises) for vertex in chunk]
+
+
+def _noise_context(settings):
     seed = settings["seed"]
     noises = (
         PerlinNoise(seed),
@@ -366,31 +378,26 @@ def _init_noise_worker(cfg, settings):
         PerlinNoise(seed + 211),
         PerlinNoise(seed + 307),
     )
-    NOISE_WORKER_CONTEXT = (cfg, settings, noises)
-
-
-def _apply_noise_chunk(chunk):
-    cfg, settings, noises = NOISE_WORKER_CONTEXT
-    return [_deform_vertex(vertex, cfg, settings, noises) for vertex in chunk]
+    return noises
 
 
 def apply_noise(vertices, cfg, workers=1):
     settings = _noise_settings(cfg)
     workers = max(1, int(workers or 1))
     vertices = list(vertices)
+    effective_workers = 1
 
     if workers == 1 or len(vertices) < 4096:
-        _init_noise_worker(cfg, settings)
-        results = _apply_noise_chunk(vertices)
+        results = _deform_chunk(vertices, cfg, settings, _noise_context(settings))
     else:
         from concurrent.futures import ProcessPoolExecutor
         import math
 
-        workers = min(workers, math.ceil(len(vertices) / 4096))
-        chunk_size = max(4096, math.ceil(len(vertices) / (workers * 4)))
+        effective_workers = min(workers, math.ceil(len(vertices) / 4096))
+        chunk_size = max(4096, math.ceil(len(vertices) / (effective_workers * 4)))
         chunks = [vertices[i:i + chunk_size] for i in range(0, len(vertices), chunk_size)]
         with ProcessPoolExecutor(
-            max_workers=workers,
+            max_workers=effective_workers,
             initializer=_init_noise_worker,
             initargs=(cfg, settings),
         ) as executor:
@@ -398,4 +405,4 @@ def apply_noise(vertices, cfg, workers=1):
             results = [item for chunk in result_chunks for item in chunk]
 
     new_vertices, colors, metadata = zip(*results) if results else ((), (), ())
-    return list(new_vertices), list(colors), list(metadata)
+    return list(new_vertices), list(colors), list(metadata), effective_workers

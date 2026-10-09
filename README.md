@@ -20,6 +20,7 @@ Pylanet is a procedural planet generator written in Python. It builds a UV spher
 - CLI export to `planet.ply`
 - WebGL viewer with rotate and zoom controls
 - Web UI PLY saving after generation
+- The Web UI displays the effective worker count for each generation
 - Black universe-style background
 - No web framework required; the UI runs on Python's built-in HTTP server
 
@@ -127,7 +128,7 @@ Useful knobs:
 - `detail_strength`: adds fine surface variation
 - `moisture`, `temperature`, `ice_caps`: influence biome placement
 - `lat`, `lon`: control mesh resolution
-- `generation.workers`: controls CPU workers for terrain and texture deformation; `auto` uses all available cores
+- `generation.workers`: worker limit for terrain and texture deformation; `auto` uses all available cores. Meshes smaller than 4096 vertices always run on one worker
 
 ## Project Layout
 
