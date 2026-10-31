@@ -39,7 +39,9 @@ def _cfg_from_payload(payload):
     terrain["moisture"] = preset["moisture"]
     terrain["temperature"] = preset["temperature"]
     terrain["ice_caps"] = preset["ice_caps"]
+    terrain["mountain_level"] = preset["mountain_level"]
     ocean["sea_level"] = preset["sea_level"]
+    cfg["biomes"] = {**(cfg.get("biomes") or {}), **preset.get("palette", {})}
 
     if "resolution" in payload:
         slider_resolution = max(24, min(360, _number(payload.get("resolution"), resolution.get("lat", 180), True)))
@@ -77,7 +79,8 @@ def _cfg_from_payload(payload):
         "snowBias": "snow",
         "rockBias": "rock",
     }
-    biome_biases = terrain.setdefault("biome_biases", {})
+    biome_biases = {**(terrain.get("biome_biases") or {}), **preset.get("biome_biases", {})}
+    terrain["biome_biases"] = biome_biases
     for payload_key, biome_name in bias_keys.items():
         biome_biases[biome_name] = _number(payload.get(payload_key), biome_biases.get(biome_name, 1.0))
     ocean["sea_level"] = _number(payload.get("seaLevel"), ocean.get("sea_level", 1.02))

@@ -16,7 +16,8 @@ Pylanet is a procedural planet generator written in Python. It builds a UV spher
 - Procedural 3D planet meshes
 - Configurable resolution, seed, terrain relief, sea level, octaves, gain, continent scale, plains bias, biome bias, and color texture
 - Planet presets: earthlike, arid, frozen, oceanic, and volcanic
-- Layered biome coloring for oceans, beaches, grasslands, forests, rainforests, savannas, deserts, tundra, rock, snow, basalt, and lava
+- Layered biome coloring for oceans, beaches, grasslands, forests, rainforests, savannas, deserts, tundra, rock, snow, basalt, lava, and ash
+- Volcanic preset with its own palette: black-sand coasts, ash plains, basalt fields, lava flows and calderas
 - CLI export to `planet.ply`
 - WebGL viewer with rotate and zoom controls
 - Web UI PLY saving after generation
@@ -122,7 +123,8 @@ Useful knobs:
 - `pattern_scale`: changes the overall size of noise patterns across terrain and biomes
 - `color_detail`: controls how strongly biome colors are broken up by layered surface texture
 - `plains_bias`: flattens ridges and compresses elevation to make broader plain areas
-- `biome_biases`: controls how strongly each biome competes during classification; `1.0` is neutral
+- `biome_biases`: controls how strongly each biome competes during classification; `1.0` is neutral. Presets can set their own biases (volcanic suppresses vegetation, and also reads `lava`, `basalt` and `ash`); an entry in `config.yaml` overrides the preset
+- `biomes`: RGB colour per biome. Each preset can carry its own palette; an entry in `config.yaml` overrides it, and anything unset falls back to the built-in defaults
 - `continent_scale`: lower values create larger landmasses; higher values create smaller, noisier ones
 - `mountain_strength`: adds sharper ridged terrain
 - `detail_strength`: adds fine surface variation
