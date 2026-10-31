@@ -18,6 +18,7 @@ DEFAULT_BIOMES = {
     "rock": [116, 112, 108],
     "basalt": [58, 54, 52],
     "lava": [232, 78, 26],
+    "ash": [96, 90, 88],
 }
 
 PLANET_PRESETS = {
@@ -78,18 +79,40 @@ PLANET_PRESETS = {
         "color_detail": 0.48,
     },
     "volcanic": {
-        "sea_level": 0.92,
+        "sea_level": 0.97,
         "temperature": 0.9,
         "moisture": 0.18,
         "ice_caps": 0.03,
-        "ocean_mix": 0.15,
-        "amplitude": 0.36,
+        "ocean_mix": 0.3,
+        "amplitude": 0.32,
         "continent_scale": 1.35,
-        "mountain_strength": 0.72,
-        "mountain_level": 0.55,
+        "mountain_strength": 0.5,
+        "mountain_level": 0.76,
         "detail_strength": 0.14,
         "pattern_scale": 1.45,
         "color_detail": 0.78,
+        "palette": {
+            "deep_ocean": [12, 20, 30],
+            "ocean": [28, 50, 60],
+            "shallows": [58, 88, 86],
+            "beach": [46, 44, 46],
+            "grassland": [74, 88, 50],
+            "forest": [44, 62, 38],
+            "savanna": [108, 96, 62],
+            "desert": [128, 104, 78],
+            "rock": [72, 66, 64],
+            "basalt": [40, 36, 36],
+            "lava": [244, 92, 24],
+            "ash": [104, 98, 94],
+        },
+        "biome_biases": {
+            "desert": 0.6,
+            "savanna": 0.6,
+            "grassland": 0.35,
+            "forest": 0.25,
+            "rainforest": 0.0,
+            "rock": 1.3,
+        },
     },
 }
 
@@ -138,13 +161,16 @@ def _color_variation(cfg, biome, base_color, u, height01, moisture, temperature,
         color = _mix_color(_color(cfg, "shallows"), _color(cfg, "deep_ocean"), depth)
         contrast = 1.0 + macro * amount * 0.25
     elif biome == "beach":
-        color = _mix_color(_color(cfg, "beach"), _color(cfg, "grassland"), _clamp(moisture * 0.35 + macro * 0.18))
+        inland = "ash" if _preset_name(cfg) == "volcanic" else "grassland"
+        color = _mix_color(_color(cfg, "beach"), _color(cfg, inland), _clamp(moisture * 0.35 + macro * 0.18))
     elif biome == "desert":
         color = _mix_color(_color(cfg, "desert"), [230, 198, 126], _clamp(macro * 0.5 + 0.5))
     elif biome == "rock":
         color = _mix_color(_color(cfg, "rock"), [86, 82, 78], _clamp(height01))
     elif biome == "basalt":
         color = _mix_color(_color(cfg, "basalt"), [96, 84, 74], _clamp(macro * 0.5 + 0.5))
+    elif biome == "ash":
+        color = _mix_color(_color(cfg, "ash"), [132, 120, 106], _clamp(macro * 0.6 + 0.3))
     elif biome == "lava":
         ember = _mix_color(_color(cfg, "lava"), [255, 190, 58], _clamp(speckle * 0.6 + 0.4))
         color = _mix_color(_color(cfg, "basalt"), ember, _clamp(0.55 + grain * 0.45))
@@ -154,13 +180,22 @@ def _color_variation(cfg, biome, base_color, u, height01, moisture, temperature,
     return _scale_color(color, contrast)
 
 def _cfg_get(cfg, section, key, default):
-    return cfg.get(section, {}).get(key, default)
+    return (cfg.get(section) or {}).get(key, default)
 
 def _color(cfg, name):
-    return tuple(cfg.get("biomes", {}).get(name, DEFAULT_BIOMES[name]))
+    configured = cfg.get("biomes") or {}
+    if name in configured:
+        return tuple(configured[name])
+    palette = _preset(cfg).get("palette", {})
+    return tuple(palette.get(name, DEFAULT_BIOMES[name]))
 
 def _biome_bias(cfg, name):
-    return _clamp(cfg.get("terrain", {}).get("biome_biases", {}).get(name, 1.0), 0.0, 2.0)
+    configured = _cfg_get(cfg, "terrain", "biome_biases", None) or {}
+    if name in configured:
+        value = configured[name]
+    else:
+        value = _preset(cfg).get("biome_biases", {}).get(name, 1.0)
+    return _clamp(value, 0.0, 2.0)
 
 def _preset(cfg):
     name = cfg.get("planet", {}).get("preset", "earthlike")
@@ -184,7 +219,24 @@ def _ridged_noise(noise, x, y, z, octaves, lacunarity, gain):
 
     return value / weight_total if weight_total else 0.0
 
-def classify_biome(cfg, radius, sea_level, height01, moisture, temperature, ice_caps):
+def _volcanic_biome(cfg, height01, moisture, activity, mountain_level):
+    lava_shift = (_biome_bias(cfg, "lava") - 1.0) * 0.06
+    basalt_shift = (_biome_bias(cfg, "basalt") - 1.0) * 0.1
+    ash_shift = (_biome_bias(cfg, "ash") - 1.0) * 0.15
+
+    if height01 > mountain_level:
+        if height01 > 0.86 and activity > 0.8 - lava_shift:
+            return "lava"
+        return "basalt"
+    if activity > 0.93 - lava_shift:
+        return "lava"
+    if activity > 0.82 - basalt_shift:
+        return "basalt"
+    if moisture < 0.3 + ash_shift:
+        return "ash"
+    return None
+
+def classify_biome(cfg, radius, sea_level, height01, moisture, temperature, ice_caps, activity=0.0):
     beach_band = _cfg_get(cfg, "terrain", "beach_band", 0.025)
     mountain_level = _cfg_get(cfg, "terrain", "mountain_level", _preset(cfg)["mountain_level"])
     volcanic = _preset_name(cfg) == "volcanic"
@@ -202,10 +254,10 @@ def classify_biome(cfg, radius, sea_level, height01, moisture, temperature, ice_
         return "beach", _color(cfg, "beach")
     if temperature < 0.18 + (snow_bias - 1.0) * 0.12:
         return "snow", _color(cfg, "snow")
-    if volcanic and height01 > effective_mountain_level:
-        if height01 > 0.9 and moisture < 0.45:
-            return "lava", _color(cfg, "lava")
-        return "basalt", _color(cfg, "basalt")
+    if volcanic:
+        volcanic_biome = _volcanic_biome(cfg, height01, moisture, activity, effective_mountain_level)
+        if volcanic_biome:
+            return volcanic_biome, _color(cfg, volcanic_biome)
     if height01 > effective_mountain_level:
         snow_line = 1.0 - ice_caps * 0.3 - (1.0 - temperature) * 0.04 - (snow_bias - 1.0) * 0.1
         if height01 > snow_line:
@@ -255,6 +307,7 @@ def _noise_settings(cfg):
         "moisture_bias": terrain_cfg.get("moisture", preset["moisture"]),
         "temperature_bias": terrain_cfg.get("temperature", preset["temperature"]),
         "ice_caps": terrain_cfg.get("ice_caps", preset["ice_caps"]),
+        "volcanic": _preset_name(cfg) == "volcanic",
     }
 
 
@@ -333,7 +386,21 @@ def _deform_vertex(vertex, cfg, settings, noises):
         - raw_height01 * 0.12
     )
 
-    biome, color = classify_biome(cfg, original_radius, settings["sea_level"], raw_height01, moisture, temperature, ice_caps)
+    activity = 0.0
+    if settings["volcanic"]:
+        activity = _ridged_noise(
+            texture_noise,
+            u[0] * 2.4 * pattern_scale,
+            u[1] * 2.4 * pattern_scale,
+            u[2] * 2.4 * pattern_scale,
+            2,
+            lacunarity,
+            gain,
+        )
+
+    biome, color = classify_biome(
+        cfg, original_radius, settings["sea_level"], raw_height01, moisture, temperature, ice_caps, activity
+    )
     color = _color_variation(
         cfg,
         biome,
@@ -354,6 +421,7 @@ def _deform_vertex(vertex, cfg, settings, noises):
         "height": round(raw_height01, 4),
         "moisture": round(moisture, 4),
         "temperature": round(temperature, 4),
+        "activity": round(activity, 4),
     }
 
 

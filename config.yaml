@@ -27,35 +27,40 @@ terrain:
   ice_caps: 0.35
   beach_band: 0.025
   mountain_level: 0.74
-  biome_biases:
-    ocean: 1.0
-    desert: 1.0
-    savanna: 1.0
-    grassland: 1.0
-    forest: 1.0
-    rainforest: 1.0
-    tundra: 1.0
-    snow: 1.0
-    rock: 1.0
+  # Biome biases come from the preset (1.0 = neutral). Uncomment an entry to
+  # override it; volcanic also reads lava, basalt and ash.
+  # biome_biases:
+  #   ocean: 1.0
+  #   desert: 1.0
+  #   savanna: 1.0
+  #   grassland: 1.0
+  #   forest: 1.0
+  #   rainforest: 1.0
+  #   tundra: 1.0
+  #   snow: 1.0
+  #   rock: 1.0
 
 ocean:
   sea_level: 1.02
 
-biomes:
-  deep_ocean: [8, 22, 74]
-  ocean: [20, 74, 156]
-  shallows: [46, 142, 178]
-  beach: [210, 190, 118]
-  grassland: [78, 156, 68]
-  forest: [32, 105, 56]
-  rainforest: [22, 132, 74]
-  savanna: [168, 156, 82]
-  desert: [202, 164, 96]
-  tundra: [160, 176, 160]
-  snow: [238, 244, 248]
-  rock: [116, 112, 108]
-  basalt: [58, 54, 52]
-  lava: [232, 78, 26]
+# Biome colours come from the preset palette, falling back to these defaults.
+# Uncomment an entry to override it for every preset.
+# biomes:
+#   deep_ocean: [8, 22, 74]
+#   ocean: [20, 74, 156]
+#   shallows: [46, 142, 178]
+#   beach: [210, 190, 118]
+#   grassland: [78, 156, 68]
+#   forest: [32, 105, 56]
+#   rainforest: [22, 132, 74]
+#   savanna: [168, 156, 82]
+#   desert: [202, 164, 96]
+#   tundra: [160, 176, 160]
+#   snow: [238, 244, 248]
+#   rock: [116, 112, 108]
+#   basalt: [58, 54, 52]
+#   lava: [232, 78, 26]
+#   ash: [96, 90, 88]
 
 export:
   filename: planet.ply

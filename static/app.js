@@ -340,7 +340,7 @@ function applyPresetToControls(name) {
   setControl("iceCaps", preset.ice_caps);
   setControl("plainsBias", 0);
   ["ocean", "desert", "savanna", "grassland", "forest", "rainforest", "tundra", "snow", "rock"].forEach((name) => {
-    setControl(`${name}Bias`, 1);
+    setControl(`${name}Bias`, preset.biome_biases?.[name] ?? 1);
   });
 }
 
